@@ -1,0 +1,68 @@
+{
+  "name": "Red Hat Section Divider",
+  "description": "Section divider slide from the Red Hat corporate template. Uses inherited background from the template deck. Contains a large title and a section marker.",
+  "source_presentation": "1nv_haj_O-miYUbNcFt3JgRF7e9FodNvRXjxjmpd7LLM",
+  "source_slide_id": "g3b6e62da0cb_1_71",
+  "usage_notes": [
+    "The background is inherited from the template layout/master. When duplicating into a non-template deck, set a solid red background: rgb(0.8, 0.11, 0.11) or use the deck's existing divider as a base.",
+    "Best approach: Copy one divider slide manually from the template into the target deck (keeps background/branding). Then duplicate that slide programmatically for additional sections.",
+    "The Slides API cannot transfer stretchedPictureFill background images across presentations — even from copies you own. Always use the 'copy manually, then duplicate via API' pattern."
+  ],
+  "elements": {
+    "title": {
+      "description": "Main section title — large white text, left-aligned",
+      "shapeType": "TEXT_BOX",
+      "position": {
+        "translateX_emu": 335914,
+        "translateY_emu": 813420
+      },
+      "size": {
+        "width_emu": 3000000,
+        "height_emu": 3000000
+      },
+      "transform": {
+        "scaleX": 1.7067,
+        "scaleY": 0.5263
+      },
+      "text_style": {
+        "fontFamily": "Red Hat Display",
+        "fontSize_pt": 45,
+        "bold": false,
+        "color": "white (inherited from layout)"
+      }
+    },
+    "section_marker": {
+      "description": "Small section marker text — top-left, white",
+      "shapeType": "TEXT_BOX",
+      "position": {
+        "translateX_emu": 335831,
+        "translateY_emu": 41580
+      },
+      "size": {
+        "width_emu": 3000000,
+        "height_emu": 3000000
+      },
+      "transform": {
+        "scaleX": 1.2872,
+        "scaleY": 0.2041
+      },
+      "text_style": {
+        "fontFamily": "inherited (Red Hat Text)",
+        "color_rgb": {"red": 1, "green": 1, "blue": 1}
+      }
+    }
+  },
+  "workflow": {
+    "step1": "Manually copy a divider slide from the Red Hat template (1nv_haj_O-miYUbNcFt3JgRF7e9FodNvRXjxjmpd7LLM) into the target presentation. This preserves the branded background pattern.",
+    "step2": "Update text on the manually copied slide using deleteText + insertText API calls.",
+    "step3": "Use duplicateObject to create additional divider slides from the first one.",
+    "step4": "Move duplicates into correct positions with updateSlidesPosition.",
+    "step5": "Update text on each duplicate with the correct section title and number."
+  },
+  "example_sections": [
+    {"marker": "Section 2", "title": "Upgrade Mechanics"},
+    {"marker": "Section 3", "title": "Automation Code Compatibility"},
+    {"marker": "Section 4", "title": "Support & Security"},
+    {"marker": "Section 5", "title": "Planning & Next Steps"}
+  ]
+}

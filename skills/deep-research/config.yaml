@@ -1,0 +1,32 @@
+# Deep Research pipeline — model and session defaults
+# Loaded by the orchestrating agent; subagents receive model IDs via Task tool.
+
+models:
+  intake: "composer-2.5-fast"
+  ingestion: "haiku-4.5"
+  clarifier: "sonnet-4.5"
+  reasoning: "opus-4.6"
+  report: "sonnet-4.6"
+
+defaults:
+  max_sources: 20
+  poll_interval_seconds: 10
+  session_timeout_seconds: 3600
+
+source_types:
+  - file          # local files (pdf, md, txt, csv, code)
+  - url           # web URLs (fetched via WebFetch)
+  - slack         # Slack channels/threads (via MCP)
+  - github        # GitHub repos/issues/PRs (via MCP)
+  - gdrive        # Google Drive docs (via gws CLI — not MCP)
+  - huggingface   # HF models/datasets (via MCP)
+  - dataverse     # people/org lookup (via MCP)
+  - kubernetes    # cluster info (via MCP)
+
+# Alternative models (override in Task tool if user requests)
+alternatives:
+  intake_fast: ["gemini-3-flash", "gpt-5.4-nano"]
+  ingestion: ["composer-2.5-fast"]
+  clarifier: ["sonnet-4.6"]
+  reasoning: ["sonnet-4.6"]
+  report: ["sonnet-4.5"]

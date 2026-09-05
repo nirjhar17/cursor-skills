@@ -1,0 +1,44 @@
+{
+  "name": "Red Hat Title Slide",
+  "description": "Opening/title slide from the Red Hat corporate template. Has branded background (inherited), Red Hat logo image, title, subtitle, presenter name, and date fields.",
+  "source_presentation": "1nv_haj_O-miYUbNcFt3JgRF7e9FodNvRXjxjmpd7LLM",
+  "source_slide_id": "g3b6e62da0cb_0_8",
+  "usage_notes": [
+    "Copy this slide manually from the template into position 1 of the target deck to preserve branding/background.",
+    "Then update text fields via the API using deleteText + insertText.",
+    "Delete any 'Quick tip' helper text boxes that come from the template."
+  ],
+  "elements": {
+    "title": {
+      "description": "Main presentation title — large text",
+      "placeholder_text": "Presentation title should not exceed two lines",
+      "position_inches": {"x": 1.83, "y": 1.43}
+    },
+    "subtitle": {
+      "description": "Subheading / context line",
+      "placeholder_text": "Optional subheading",
+      "position_inches": {"x": 1.83, "y": 2.89}
+    },
+    "presenter_name": {
+      "description": "Presenter name and title (left field)",
+      "placeholder_text": "Presenter's name\\nTitle",
+      "position_inches": {"x": 1.83, "y": 3.78}
+    },
+    "date_field": {
+      "description": "Date or second presenter (right field)",
+      "placeholder_text": "Presenter's name\\nTitle",
+      "position_inches": {"x": 3.79, "y": 3.78}
+    },
+    "logo": {
+      "description": "Red Hat logo image (top area)",
+      "type": "image",
+      "position_inches": {"x": 1.31, "y": 0.77}
+    }
+  },
+  "workflow": {
+    "step1": "Copy slide from template (1nv_haj_O-miYUbNcFt3JgRF7e9FodNvRXjxjmpd7LLM) slide 9 into position 1 of target deck.",
+    "step2": "Find text elements by their y-position: title (~1.43in), subtitle (~2.89in), presenter (~3.78in left), date (~3.78in right).",
+    "step3": "Use deleteText + insertText to replace placeholder text.",
+    "step4": "Delete any 'Quick tip' helper elements (check for elements containing 'Quick tip' text)."
+  }
+}

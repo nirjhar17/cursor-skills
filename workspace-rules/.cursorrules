@@ -1,0 +1,143 @@
+# Blog Writing Rules for Medium
+
+When asked to write a blog post, article, or any content intended for Medium, follow these rules strictly:
+
+## Formatting Constraints
+
+1. **No tables** — Convert any tabular data to:
+   - Bullet point lists, or
+   - Numbered lists with clear labels, or
+   - Simple paragraph comparisons
+
+2. **No front matter** — Do not include YAML front matter (the `---` blocks at the top)
+
+3. **Headings** — Use only:
+   - `#` for the title (H1) — only once at the top
+   - `##` for section headers (H2)
+   - Avoid H3 and deeper — Medium renders them poorly
+
+4. **Code blocks** — Keep them simple:
+   - Use triple backticks without language specifiers when possible
+   - Keep code snippets short (Medium's code display is limited)
+   - For longer code, suggest using GitHub Gists instead
+
+5. **No inline HTML** — Medium strips most HTML tags
+
+6. **No footnotes** — Integrate citations directly into the text or use parenthetical references
+
+7. **Images** — Use standard Markdown image syntax: `![alt text](url)`
+   - Note: Images will need to be re-uploaded in Medium manually
+
+8. **Links** — Standard `[text](url)` format works fine
+
+9. **Lists** — Keep them simple:
+   - Single-level bullet points (`-` or `*`)
+   - Single-level numbered lists (`1.`, `2.`, etc.)
+   - Avoid nested lists (Medium handles them poorly)
+
+10. **Emphasis** — Medium does NOT render raw markdown when pasting:
+    - Do NOT use `**bold**` inline — Medium shows literal asterisks when text is pasted
+    - Do NOT use `*italic*` inline — same problem
+    - Instead, restructure sentences so emphasis comes from word choice and position
+    - Use block quotes (`>`) for callouts that need visual weight
+    - Use headings (`##`) to create structure, not inline bold
+
+11. **Block quotes** — Use `>` for quotes, they render well on Medium
+
+12. **Horizontal rules** — Avoid `---` as dividers (can conflict with front matter parsing)
+
+## Writing Style for Medium
+
+- Start with a hook — Medium readers decide in 2 seconds whether to continue
+- Use short paragraphs (2-4 sentences max)
+- Include a clear takeaway or CTA at the end
+- Aim for 5-8 minute read time (1000-1800 words) for optimal engagement
+
+## File Output
+
+- Save blog posts as `.md` files
+- Use kebab-case for filenames: `my-blog-post-title.md`
+- Do not include date prefixes unless specifically requested
+
+## After Writing a Blog — Publishing Workflow
+
+After the blog is written and finalized, always follow these steps:
+
+1. Ask the user: "Would you like me to push this blog to GitHub and publish it as a web page?"
+2. If the user says yes, do both steps below in order:
+
+   Step A — Push to Git:
+   - Stage and commit the blog file to the local git repository with a meaningful commit message
+   - Push the commit to the remote GitHub repository
+   - Confirm the push was successful
+
+   Step B — Publish on GitHub Pages using Jekyll:
+   - Ensure GitHub Pages is enabled on the repo (use `gh api` to check/enable, deploy from main branch)
+   - Ensure a `_config.yml` exists in the repo root with a Jekyll remote theme. Use Cayman by default:
+     ```
+     remote_theme: pages-themes/cayman@v0.2.0
+     plugins:
+       - jekyll-remote-theme
+     title: Site Title
+     description: Site description
+     ```
+   - Ensure an `index.md` exists with `layout: default` front matter and links to the blog
+   - Add Jekyll front matter to the blog file itself (layout: default, title: Blog Title) between `---` markers at the top
+   - Use `gh api` to enable Pages if not already enabled: `gh api repos/{owner}/{repo}/pages -X POST -f source.branch=main -f source.path=/`
+   - Wait for the Jekyll build to complete (check with `gh api repos/{owner}/{repo}/pages/builds/latest`)
+   - Share the live GitHub Pages URL with the user (format: https://{username}.github.io/{repo-name}/{blog-filename-without-extension})
+
+3. If the user only wants to push to git (not publish as a web page), do only Step A
+4. If the user says no to both, do nothing — just leave the file locally
+
+## Required Sections at the End of Every Blog
+
+Every blog post MUST end with these two sections, in this exact order, after the main content:
+
+## About Me
+
+I work on OpenShift, OpenShift AI, and observability solutions, focusing on simplifying complex setups into practical, repeatable steps for platform and development teams.
+
+GitHub: [github.com/nirjhar17](https://github.com/nirjhar17)
+
+LinkedIn: [linkedin.com/in/nirjhar-jajodia](https://linkedin.com/in/nirjhar-jajodia)
+
+## Disclaimer
+
+The views and opinions expressed in this article are my own and do not necessarily reflect the official policy or position of my employer. This guide is provided for educational purposes, and I make no warranties about the completeness, reliability, or accuracy of this information.
+
+## Example Structure
+
+```markdown
+# Your Compelling Title Here
+
+A hook paragraph that draws the reader in and establishes why they should care.
+
+## First Major Point
+
+Content here. Keep paragraphs short and scannable.
+
+## Second Major Point
+
+More content. Use bullet points sparingly:
+
+- Point one
+- Point two
+- Point three
+
+## Conclusion
+
+Wrap up with a clear takeaway. Consider ending with a question to drive engagement.
+
+## About Me
+
+I work on OpenShift, OpenShift AI, and observability solutions, focusing on simplifying complex setups into practical, repeatable steps for platform and development teams.
+
+GitHub: github.com/nirjhar17
+
+LinkedIn: linkedin.com/in/nirjhar-jajodia
+
+## Disclaimer
+
+The views and opinions expressed in this article are my own and do not necessarily reflect the official policy or position of my employer. This guide is provided for educational purposes, and I make no warranties about the completeness, reliability, or accuracy of this information.
+```

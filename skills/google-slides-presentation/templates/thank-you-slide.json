@@ -1,0 +1,29 @@
+{
+  "name": "Red Hat Thank You / Closing Slide",
+  "description": "Closing slide from the Red Hat corporate template. Has branded background (inherited), 'Thank you' heading, and Red Hat boilerplate text.",
+  "source_presentation": "1nv_haj_O-miYUbNcFt3JgRF7e9FodNvRXjxjmpd7LLM",
+  "source_slide_id": "g3b6e62da0cb_0_19",
+  "usage_notes": [
+    "Copy this slide manually from the template into the last position of the target deck.",
+    "The 'Thank you' text and Red Hat boilerplate are pre-filled.",
+    "Optionally update the boilerplate with custom text (contact info, next steps, etc.).",
+    "The slide background is inherited from the template — copying preserves the branded look."
+  ],
+  "elements": {
+    "heading": {
+      "description": "'Thank you' heading text",
+      "placeholder_text": "Thank you",
+      "position_inches": {"x": 1.71, "y": 0.47}
+    },
+    "body": {
+      "description": "Red Hat boilerplate or custom closing text",
+      "placeholder_text": "Red Hat is the world's leading provider of enterprise open source software solutions...",
+      "position_inches": {"x": 1.71, "y": 2.47}
+    }
+  },
+  "workflow": {
+    "step1": "Copy slide from template (1nv_haj_O-miYUbNcFt3JgRF7e9FodNvRXjxjmpd7LLM) slide 10 into last position of target deck.",
+    "step2": "Optionally update body text with custom content using deleteText + insertText.",
+    "step3": "The 'Thank you' heading can be left as-is or customized."
+  }
+}

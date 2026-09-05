@@ -1,0 +1,181 @@
+{
+  "system": "MTC same-cluster storage class conversion",
+  "audience": "Customer platform / storage team (BDO)",
+  "color_mode": "light",
+  "modes": ["direct", "indirect"],
+  "mode_descriptions": {
+    "direct": "Volume data copies on-cluster (Rsync / filesystem). Repo optional for object backup.",
+    "indirect": "Volume data passes through S3-compatible replication repository via Velero."
+  },
+  "nodes": [
+    {
+      "id": "mtc_ui",
+      "role": "orch",
+      "label": "MTC UI + Controller",
+      "subtitle": "Host cluster operator",
+      "zone": "control",
+      "x_pct": 6,
+      "y_pct": 8
+    },
+    {
+      "id": "mig_plan",
+      "role": "orch",
+      "label": "MigPlan",
+      "subtitle": "Namespaces · PVs · copy method · target SC",
+      "zone": "control",
+      "x_pct": 36,
+      "y_pct": 8
+    },
+    {
+      "id": "mig_migration",
+      "role": "seed",
+      "label": "MigMigration",
+      "subtitle": "Stage · cutover · rollback",
+      "zone": "control",
+      "x_pct": 66,
+      "y_pct": 8
+    },
+    {
+      "id": "mig_cluster",
+      "role": "orch",
+      "label": "MigCluster",
+      "subtitle": "API endpoint + SA token",
+      "zone": "control",
+      "x_pct": 22,
+      "y_pct": 38
+    },
+    {
+      "id": "mig_storage",
+      "role": "vector",
+      "label": "MigStorage",
+      "subtitle": "Repo credentials + bucket",
+      "zone": "control",
+      "x_pct": 52,
+      "y_pct": 38
+    },
+    {
+      "id": "velero",
+      "role": "compute",
+      "label": "Velero",
+      "subtitle": "Backup / restore agents",
+      "zone": "core",
+      "x_pct": 8,
+      "y_pct": 72
+    },
+    {
+      "id": "app_ns",
+      "role": "user",
+      "label": "App + Namespace",
+      "subtitle": "Workloads using the PVC",
+      "zone": "core",
+      "x_pct": 32,
+      "y_pct": 72
+    },
+    {
+      "id": "pvc_old",
+      "role": "vector",
+      "label": "PVC · old SC",
+      "subtitle": "Current storage class",
+      "zone": "data",
+      "x_pct": 56,
+      "y_pct": 66
+    },
+    {
+      "id": "pvc_new",
+      "role": "vector",
+      "label": "PVC · new SC",
+      "subtitle": "Target storage class",
+      "zone": "data",
+      "x_pct": 56,
+      "y_pct": 84
+    },
+    {
+      "id": "s3_repo",
+      "role": "vector",
+      "label": "S3 replication repo",
+      "subtitle": "Indirect object path",
+      "zone": "backing",
+      "x_pct": 82,
+      "y_pct": 74
+    }
+  ],
+  "flows": [
+    {
+      "key": "sc_conversion",
+      "name": "Storage class conversion",
+      "purpose": "Same cluster, same namespace, new storage class with stage/cutover/rollback.",
+      "steps": [
+        {
+          "from": "mtc_ui",
+          "to": "mig_plan",
+          "title": "creates",
+          "desc": "Operator defines what to migrate and the target storage class.",
+          "chips": ["MigPlan", "same-cluster"]
+        },
+        {
+          "from": "mig_plan",
+          "to": "mig_cluster",
+          "title": "refers to",
+          "desc": "Plan binds to the registered OpenShift cluster endpoint.",
+          "chips": ["MigCluster"]
+        },
+        {
+          "from": "mig_plan",
+          "to": "mig_storage",
+          "title": "refers to",
+          "desc": "Plan binds replication repository credentials when indirect copy is used.",
+          "chips": ["MigStorage"]
+        },
+        {
+          "from": "mig_plan",
+          "to": "mig_migration",
+          "title": "runs",
+          "desc": "A MigMigration executes stage, cutover, or rollback against the plan.",
+          "chips": ["stage", "cutover"]
+        },
+        {
+          "from": "mig_cluster",
+          "to": "velero",
+          "title": "targets",
+          "desc": "Cluster registration points MTC at Velero and workload namespaces.",
+          "chips": ["Velero"]
+        },
+        {
+          "from": "pvc_old",
+          "to": "pvc_new",
+          "title": "cutover",
+          "desc": "After staged data is ready, cutover switches the PVC to the new storage class.",
+          "chips": ["low-downtime", "rollback-ready"]
+        }
+      ]
+    },
+    {
+      "key": "indirect_data",
+      "name": "Indirect data path",
+      "purpose": "Bytes travel through the replication repository.",
+      "steps": [
+        {
+          "from": "velero",
+          "to": "s3_repo",
+          "title": "backup",
+          "desc": "Velero writes volume/object backup data to S3-compatible storage.",
+          "chips": ["indirect"]
+        },
+        {
+          "from": "s3_repo",
+          "to": "pvc_new",
+          "title": "restore",
+          "desc": "Restore materializes data onto the PVC with the new storage class.",
+          "chips": ["new SC"]
+        }
+      ]
+    }
+  ],
+  "slide_plan": {
+    "overview": true,
+    "storyboard_flow": null,
+    "mode_compare_slides": false,
+    "title": "MTC Architecture — Flow-Aware View",
+    "subtitle": "Skill-built overview: nodes, primary flow preview, and visual states for SC conversion"
+  }
+}

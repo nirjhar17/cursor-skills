@@ -1,0 +1,16 @@
+---
+description: Use gws CLI for ALL Google Workspace operations — Drive, Gmail, Calendar, Sheets, Slides
+alwaysApply: true
+---
+
+For ANY Google Workspace operation (Drive, Gmail, Calendar, Sheets, Slides, Docs):
+
+1. ALWAYS use the `gws` CLI — NEVER attempt to use a Google Drive MCP, Google Slides MCP, or any Google-related MCP. They are not configured.
+2. The `gws` CLI is already authenticated and supports all Google Workspace APIs.
+3. For Google Slides presentations specifically, follow the `google-slides-presentation` skill.
+4. Common commands:
+   - Drive: `gws drive files list --params '{"q": "name contains ..."}' `
+   - Gmail: `gws gmail users messages list --params '{"userId":"me",...}'`
+   - Calendar: `gws calendar events list --params '{"calendarId":"primary",...}'`
+   - Sheets: `gws sheets spreadsheets create --json '{"properties":{"title":"..."}}'`
+   - Slides: `gws slides presentations create --json '{"title":"..."}'`
