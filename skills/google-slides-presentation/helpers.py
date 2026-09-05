@@ -957,6 +957,300 @@ def build_agenda_slide(reqs, slide_id, title, subtitle, items, slide_num, color_
 
 
 # ================================================================
+# DIAGRAM & VISUAL SLIDE PATTERNS — v2.0
+# ================================================================
+#
+# New patterns developed from test deck iterations:
+#   - create_connector: node-to-node arrows between shapes
+#   - build_split_image_slide: text + image side-by-side
+#   - build_diagram_image_slide: full-width diagram image
+#   - build_diagram_from_data: data-driven node-edge diagrams
+#
+# All functions follow the same conventions as the v1.0 patterns above:
+#   - respect color_mode parameter
+#   - use module-level color globals (BG_PRIMARY, TEXT_PRIMARY, etc.)
+#   - take slide_num for footer numbering
+#   - call add_footer helpers (logo, slide number)
+
+def create_connector(reqs, slide_id, start_shape_id, end_shape_id,
+                     start_site=2, end_site=0,
+                     line_color=None, weight_pt=1.5,
+                     start_arrow="NONE", end_arrow="OPEN_ARROW",
+                     line_category="STRAIGHT"):
+    """Create a connected line (arrow) between two shapes on the same slide.
+
+    Connection site indices for rectangular shapes:
+        0 = top-center, 1 = right-center,
+        2 = bottom-center, 3 = left-center.
+
+    Args:
+        reqs: request list to append to
+        slide_id: slide object ID
+        start_shape_id: objectId of the shape where the line begins
+        end_shape_id: objectId of the shape where the line ends
+        start_site: connection site index on start shape (default 2 = bottom)
+        end_site: connection site index on end shape (default 0 = top)
+        line_color: color dict (default TEXT_MUTED)
+        weight_pt: line weight in points (default 1.5)
+        start_arrow: arrow style at start ("NONE", "OPEN_ARROW", "FILL_ARROW", etc.)
+        end_arrow: arrow style at end (default "OPEN_ARROW")
+        line_category: "STRAIGHT", "BENT", or "CURVED" (default "STRAIGHT")
+
+    Returns:
+        The line object ID.
+    """
+    if line_color is None:
+        line_color = TEXT_MUTED
+
+    lid = uid()
+
+    reqs.append({"createLine": {
+        "objectId": lid,
+        "lineCategory": line_category,
+        "elementProperties": {
+            "pageObjectId": slide_id,
+            "size": {
+                "width": {"magnitude": 914400, "unit": "EMU"},
+                "height": {"magnitude": 914400, "unit": "EMU"}
+            },
+            "transform": {
+                "scaleX": 1, "scaleY": 1,
+                "translateX": 0, "translateY": 0,
+                "unit": "EMU"
+            }
+        }
+    }})
+
+    line_props = {
+        "startConnection": {
+            "connectedObjectId": start_shape_id,
+            "connectionSiteIndex": start_site
+        },
+        "endConnection": {
+            "connectedObjectId": end_shape_id,
+            "connectionSiteIndex": end_site
+        },
+        "lineFill": {
+            "solidFill": {"color": rgb(line_color), "alpha": 1.0}
+        },
+        "weight": {"magnitude": weight_pt, "unit": "PT"},
+        "startArrow": start_arrow,
+        "endArrow": end_arrow
+    }
+
+    reqs.append({"updateLineProperties": {
+        "objectId": lid,
+        "lineProperties": line_props,
+        "fields": "startConnection,endConnection,lineFill.solidFill.color,"
+                  "weight,startArrow,endArrow"
+    }})
+
+    return lid
+
+
+def build_split_image_slide(reqs, slide_id, title, subtitle, bullets, image_url,
+                            slide_num, color_mode="light", image_side="right"):
+    """Text bullets on one side, image on the other — ideal for concept
+    explanations paired with an AI-generated illustration or photo.
+
+    Args:
+        reqs: request list to append to
+        slide_id: slide object ID (caller must append create_slide first)
+        title: slide title text (assertion-style, <55 chars)
+        subtitle: optional subtitle text (None to skip)
+        bullets: list of bullet-point strings (no leading "•")
+        image_url: publicly-fetchable URL of the image
+        slide_num: slide number for footer
+        color_mode: "light", "dark", or "expressive_dark"
+        image_side: "right" (default) or "left"
+    """
+    reqs.append(slide_bg(slide_id, BG_PRIMARY))
+    add_red_accent_bar(reqs, slide_id)
+    add_slide_title(reqs, slide_id, title)
+    if subtitle:
+        add_slide_subtitle(reqs, slide_id, subtitle)
+
+    text_w = int(CONTENT_W * 0.52)
+    img_w = CONTENT_W - text_w - 182880   # 0.20" gap
+
+    if image_side == "right":
+        text_x = CONTENT_X
+        img_x = CONTENT_X + text_w + 182880
+    else:
+        img_x = CONTENT_X
+        text_x = CONTENT_X + img_w + 182880
+
+    bullet_text = "\n".join(f"• {b}" for b in bullets)
+    add_content_text(reqs, slide_id, text_x, CONTENT_TOP_Y, text_w,
+                     bullet_text, font_size=13, color=TEXT_PRIMARY)
+
+    img_h = min(CONTENT_ZONE_H, img_w)
+    img_y = CONTENT_TOP_Y + (CONTENT_ZONE_H - img_h) // 2
+    img_id = uid()
+    reqs.append({"createImage": {
+        "objectId": img_id,
+        "url": image_url,
+        "elementProperties": {
+            "pageObjectId": slide_id,
+            "size": {"width": {"magnitude": img_w, "unit": "EMU"},
+                     "height": {"magnitude": img_h, "unit": "EMU"}},
+            "transform": {"scaleX": 1, "scaleY": 1,
+                          "translateX": img_x, "translateY": img_y,
+                          "unit": "EMU"}
+        }
+    }})
+
+    add_rh_logo(reqs, slide_id, color_mode)
+    add_slide_number(reqs, slide_id, slide_num)
+
+
+def build_diagram_image_slide(reqs, slide_id, title, subtitle, image_url,
+                              slide_num, color_mode="light",
+                              image_scale=0.85):
+    """Full-width diagram image with title and subtitle — ideal for
+    draw.io sketch exports, architecture diagrams, or any pre-rendered
+    diagram PNG/SVG.
+
+    Args:
+        reqs: request list to append to
+        slide_id: slide object ID (caller must append create_slide first)
+        title: slide title text
+        subtitle: optional subtitle text (None to skip)
+        image_url: publicly-fetchable URL of the diagram image
+        slide_num: slide number for footer
+        color_mode: "light", "dark", or "expressive_dark"
+        image_scale: fraction of content zone to fill (default 0.85)
+    """
+    reqs.append(slide_bg(slide_id, BG_PRIMARY))
+    add_red_accent_bar(reqs, slide_id)
+    add_slide_title(reqs, slide_id, title)
+    if subtitle:
+        add_slide_subtitle(reqs, slide_id, subtitle)
+
+    img_w = int(CONTENT_W * image_scale)
+    img_h = int(CONTENT_ZONE_H * image_scale)
+    img_x = CONTENT_X + (CONTENT_W - img_w) // 2
+    img_y = CONTENT_TOP_Y + (CONTENT_ZONE_H - img_h) // 2
+
+    img_id = uid()
+    reqs.append({"createImage": {
+        "objectId": img_id,
+        "url": image_url,
+        "elementProperties": {
+            "pageObjectId": slide_id,
+            "size": {"width": {"magnitude": img_w, "unit": "EMU"},
+                     "height": {"magnitude": img_h, "unit": "EMU"}},
+            "transform": {"scaleX": 1, "scaleY": 1,
+                          "translateX": img_x, "translateY": img_y,
+                          "unit": "EMU"}
+        }
+    }})
+
+    add_rh_logo(reqs, slide_id, color_mode)
+    add_slide_number(reqs, slide_id, slide_num)
+
+
+def build_diagram_from_data(reqs, slide_id, title, subtitle,
+                            nodes, edges, slide_num,
+                            color_mode="light",
+                            default_node_color=None,
+                            default_text_color=None,
+                            connector_color=None):
+    """Data-driven node-edge diagram built from structured data.
+
+    Creates labeled boxes for each node and connected arrows for each edge,
+    all within the standard content zone boundaries.
+
+    Args:
+        reqs: request list to append to
+        slide_id: slide object ID (caller must append create_slide first)
+        title: slide title text
+        subtitle: optional subtitle text (None to skip)
+        nodes: list of dicts, each with:
+            - id (str): unique identifier for connector references
+            - label (str): text displayed inside the node
+            - x (float): left position in inches relative to content zone
+            - y (float): top position in inches relative to content zone
+            - w (float): width in inches
+            - h (float): height in inches
+            - color (dict, optional): fill color (default BG_SURFACE or BG_SECONDARY)
+            - text_color (dict, optional): text color (default TEXT_PRIMARY)
+            - font_size (int, optional): font size in pt (default 11)
+            - shape (str, optional): "RECTANGLE", "ROUND_RECTANGLE", "ELLIPSE"
+                                     (default "ROUND_RECTANGLE")
+        edges: list of dicts, each with:
+            - from_id (str): node id where the line starts
+            - to_id (str): node id where the line ends
+            - start_site (int, optional): connection site index (default 2 = bottom)
+            - end_site (int, optional): connection site index (default 0 = top)
+            - label (str, optional): text label on the edge (not yet supported
+              natively — rendered as a small text box near midpoint)
+        slide_num: slide number for footer
+        color_mode: "light", "dark", or "expressive_dark"
+        default_node_color: fallback fill for nodes without explicit color
+        default_text_color: fallback text color for nodes without explicit text_color
+        connector_color: color for all connector lines (default TEXT_MUTED)
+    """
+    reqs.append(slide_bg(slide_id, BG_PRIMARY))
+    add_red_accent_bar(reqs, slide_id)
+    add_slide_title(reqs, slide_id, title)
+    if subtitle:
+        add_slide_subtitle(reqs, slide_id, subtitle)
+
+    if default_node_color is None:
+        default_node_color = BG_SURFACE if BG_SURFACE else BG_SECONDARY
+    if default_text_color is None:
+        default_text_color = TEXT_PRIMARY
+    if connector_color is None:
+        connector_color = TEXT_MUTED
+
+    node_shape_ids = {}
+
+    for node in nodes:
+        nid = node["id"]
+        label = node.get("label", "")
+        nx = CONTENT_X + inches(node["x"])
+        ny = CONTENT_TOP_Y + inches(node["y"])
+        nw = inches(node["w"])
+        nh = inches(node["h"])
+        fill = node.get("color", default_node_color)
+        text_c = node.get("text_color", default_text_color)
+        font_sz = node.get("font_size", 11)
+        shape_type = node.get("shape", "ROUND_RECTANGLE")
+
+        if ny < CONTENT_TOP_Y:
+            ny = CONTENT_TOP_Y
+        if ny + nh > CONTENT_BOT_Y:
+            nh = CONTENT_BOT_Y - ny
+        if nh <= 0:
+            continue
+
+        sid = uid()
+        node_shape_ids[nid] = sid
+        reqs.append(create_shape(sid, slide_id, shape_type, nx, ny, nw, nh))
+        reqs.append(shape_fill(sid, fill))
+        reqs.append(shape_no_border(sid))
+        if label:
+            reqs.append(insert_text(sid, label))
+            reqs.append(style_text(sid, font_sz, text_c, bold=True))
+            reqs.append(align_text(sid, "CENTER"))
+
+    for edge in edges:
+        from_sid = node_shape_ids.get(edge["from_id"])
+        to_sid = node_shape_ids.get(edge["to_id"])
+        if from_sid and to_sid:
+            create_connector(
+                reqs, slide_id, from_sid, to_sid,
+                start_site=edge.get("start_site", 2),
+                end_site=edge.get("end_site", 0),
+                line_color=connector_color
+            )
+
+    add_rh_logo(reqs, slide_id, color_mode)
+    add_slide_number(reqs, slide_id, slide_num)
+
+
+# ================================================================
 # TITLE & THANK-YOU SLIDE PATTERNS (mandatory — first/last slide of every deck)
 # ================================================================
 #

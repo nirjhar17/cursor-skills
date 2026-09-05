@@ -272,6 +272,10 @@ slide build patterns (build_two_column_slide, etc.), and the batch sender.
 - `build_title_slide()` — complete first slide (MANDATORY, see below)
 - `build_thank_you_slide()` — complete last slide (MANDATORY, see below)
 - `build_agenda_slide()` — complete agenda slide with icon-or-badge items (MANDATORY icon lookup first, see A4b below)
+- `build_split_image_slide()` — text bullets + image side-by-side (v2.0)
+- `build_diagram_image_slide()` — full-width diagram image with title (v2.0)
+- `build_diagram_from_data()` — data-driven node-edge diagram (v2.0)
+- `create_connector()` — connected arrow between two shapes (v2.0)
 
 Key rules for the builder script:
 
@@ -663,6 +667,111 @@ Row slots subdivide the content zone evenly so any item count (2-8) fits without
 - **Big Number / Stat slide** — one giant number (36-48pt Red Hat Display Bold, ACCENT color), context label below (10-12pt), optional delta indicator (arrow or +/- in TEAL_50 or RH_RED)
 - **Flowchart / Decision slide** — dark rectangle for decision question at top, colored rectangles for options below, small arrow shapes (triangle/rectangle) connecting elements vertically, 3 destination boxes at bottom
 - **Upgrade/Process Path diagram** — colored background panels per path (pastel), white boxes for each state/step, small filled rectangles as directional arrows between boxes, label text below or beside each path, "RECOMMENDED" badge (green rounded-rect) on preferred path
+
+### v2.0 Diagram & Visual Patterns
+
+These patterns were added in v2.0 and live in `helpers.py` alongside the
+existing build patterns. Import them via `from helpers import *`.
+
+#### Pattern: Split-Layout with Image (text + illustration)
+
+Use for concept slides where one half explains in bullets and the other
+half shows an AI-generated illustration, photo, or screenshot.
+
+```python
+s = uid()
+reqs.append(create_slide(s))
+build_split_image_slide(reqs, s,
+    title="Prefill Is Compute, Decode Is Memory",
+    subtitle=None,
+    bullets=[
+        "PREFILL: processes entire input in parallel on GPU",
+        "Produces the first token (TTFT metric)",
+        "DECODE: generates tokens one at a time",
+        "Memory-bound — limited by KV cache access speed",
+    ],
+    image_url="https://example.com/illustration.png",
+    slide_num=4,
+    color_mode=COLOR_MODE,
+    image_side="right")   # or "left"
+```
+
+Image must be a publicly-fetchable URL (raw.githubusercontent.com is best).
+The image auto-centers vertically in the content zone and respects the
+footer boundary.
+
+#### Pattern: Diagram Image Slide (full-width diagram)
+
+Use for pre-rendered diagrams (draw.io exports, architecture PNGs, etc.)
+that should fill most of the content zone.
+
+```python
+s = uid()
+reqs.append(create_slide(s))
+build_diagram_image_slide(reqs, s,
+    title="KServe Separates Runtime from Model",
+    subtitle="Platform teams own ServingRuntime, data scientists own InferenceService",
+    image_url="https://example.com/kserve-sketch.png",
+    slide_num=5,
+    color_mode=COLOR_MODE,
+    image_scale=0.85)   # 0.0-1.0, fraction of content zone
+```
+
+For draw.io sketch diagrams, export at 2x scale for crisp display. Use
+`sketch=1, curveFitting=1, jiggle=2` in draw.io XML for hand-drawn style.
+Set `fontColor=#FFFFFF` on edge labels when using dark backgrounds.
+
+#### Pattern: Connected Connectors (node-to-node arrows)
+
+Use `create_connector()` to draw real connected lines between shapes.
+Connection site indices: 0=top, 1=right, 2=bottom, 3=left.
+
+```python
+box_a = add_rounded_rect(reqs, slide_id, "Step A", ...)
+box_b = add_rounded_rect(reqs, slide_id, "Step B", ...)
+create_connector(reqs, slide_id, box_a, box_b,
+    start_site=2, end_site=0,      # bottom of A → top of B
+    end_arrow="OPEN_ARROW",
+    line_color=TEXT_MUTED,
+    weight_pt=1.5)
+```
+
+Arrow styles: `"NONE"`, `"OPEN_ARROW"`, `"FILL_ARROW"`,
+`"FILL_CIRCLE"`, `"FILL_SQUARE"`, `"FILL_DIAMOND"`.
+
+#### Pattern: Data-Driven Diagram (nodes + edges)
+
+Use for architecture diagrams, flowcharts, or any graph that can be
+expressed as a list of positioned nodes and edges between them.
+
+```python
+nodes = [
+    {"id": "user",  "label": "User Request",     "x": 3.5, "y": 0.0, "w": 2.0, "h": 0.5,
+     "color": TEAL_50, "text_color": WHITE},
+    {"id": "route", "label": "Istio Gateway",     "x": 3.5, "y": 0.9, "w": 2.0, "h": 0.5},
+    {"id": "kserve","label": "KServe Predictor",  "x": 3.5, "y": 1.8, "w": 2.0, "h": 0.5,
+     "color": PURPLE_50, "text_color": WHITE},
+    {"id": "gpu",   "label": "GPU Pod (vLLM)",    "x": 3.5, "y": 2.7, "w": 2.0, "h": 0.5,
+     "color": RH_RED, "text_color": WHITE},
+]
+edges = [
+    {"from_id": "user",  "to_id": "route"},
+    {"from_id": "route", "to_id": "kserve"},
+    {"from_id": "kserve","to_id": "gpu"},
+]
+s = uid()
+reqs.append(create_slide(s))
+build_diagram_from_data(reqs, s,
+    title="Request Flows Through Four Layers",
+    subtitle="Each layer adds routing, scaling, or runtime logic",
+    nodes=nodes, edges=edges,
+    slide_num=6, color_mode=COLOR_MODE)
+```
+
+Node coordinates (`x`, `y`) are in inches relative to the content zone
+origin (top-left of content area). The function clamps all nodes to
+`CONTENT_TOP_Y` / `CONTENT_BOT_Y`. Optional per-node keys: `shape`
+(`"ROUND_RECTANGLE"`, `"RECTANGLE"`, `"ELLIPSE"`), `font_size` (int, pt).
 
 ### Diagram Building Technique (Layered Shapes)
 
