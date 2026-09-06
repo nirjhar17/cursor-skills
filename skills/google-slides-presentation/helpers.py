@@ -182,6 +182,17 @@ RH_LOGO_Y = 4623206    # 5.056"
 # COLOR MODE SETUP — call setup_color_mode() at the top of every script
 # ================================================================
 
+# ============================================================
+# WARNING: If you import these colors with 'from helpers import *',
+# they are SNAPSHOT copies. After calling setup_color_mode(), you
+# MUST rebind them:
+#     colors = setup_color_mode("expressive_dark")
+#     globals().update(colors)
+# 
+# Or use: import helpers; helpers.setup_color_mode("expressive_dark")
+# Then reference helpers.TEXT_PRIMARY etc.
+# ============================================================
+
 # These are module-level defaults (light mode). Build scripts MUST call
 # setup_color_mode("light"|"dark"|"expressive_dark") to set them properly.
 BG_PRIMARY     = WHITE
@@ -200,7 +211,15 @@ HIGHLIGHT_PURPLE = None
 def setup_color_mode(mode="light"):
     """MUST be called at the top of every build script to configure colors.
     mode: "light", "dark", or "expressive_dark"
-    Returns a dict of all color variables for convenience."""
+    
+    Returns a dict of ALL color variables so callers can rebind them.
+    
+    IMPORTANT: If you use 'from helpers import *', you MUST rebind colors:
+        colors = setup_color_mode("expressive_dark")
+        globals().update(colors)
+    
+    Or better, use 'import helpers' and reference helpers.TEXT_PRIMARY etc.
+    """
     global BG_PRIMARY, BG_SECONDARY, TEXT_PRIMARY, TEXT_SECONDARY
     global TEXT_MUTED, ACCENT, BG_SURFACE, HIGHLIGHT_TEAL, HIGHLIGHT_PURPLE
 
@@ -228,10 +247,17 @@ def setup_color_mode(mode="light"):
         HIGHLIGHT_TEAL   = TEAL_50
         HIGHLIGHT_PURPLE = PURPLE_40
 
+    # Return all color variables for callers to rebind
     return {
-        "BG_PRIMARY": BG_PRIMARY, "BG_SECONDARY": BG_SECONDARY,
-        "TEXT_PRIMARY": TEXT_PRIMARY, "TEXT_SECONDARY": TEXT_SECONDARY,
-        "TEXT_MUTED": TEXT_MUTED, "ACCENT": ACCENT,
+        "BG_PRIMARY": BG_PRIMARY,
+        "BG_SECONDARY": BG_SECONDARY,
+        "TEXT_PRIMARY": TEXT_PRIMARY,
+        "TEXT_SECONDARY": TEXT_SECONDARY,
+        "TEXT_MUTED": TEXT_MUTED,
+        "ACCENT": ACCENT,
+        "BG_SURFACE": BG_SURFACE,
+        "HIGHLIGHT_TEAL": HIGHLIGHT_TEAL,
+        "HIGHLIGHT_PURPLE": HIGHLIGHT_PURPLE,
     }
 
 
