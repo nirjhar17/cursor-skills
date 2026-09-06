@@ -1467,6 +1467,156 @@ def build_thank_you_slide(reqs, slide_id, slide_num, body_text=None, social_link
 
 
 # ================================================================
+# DIAGRAM SELECTION FRAMEWORK — v2.2
+# ================================================================
+
+def select_diagram_approach(diagram_description):
+    """Recommend the best diagram approach based on content characteristics.
+    
+    Returns one of: 'drawio_sketch', 'native_connector', 'sheets_chart', 'ai_illustration'
+    
+    Decision tree:
+    1. Nested/grouped shapes → drawio_sketch
+    2. Labeled arrows needed → drawio_sketch
+    3. Branching/multiple paths → drawio_sketch
+    4. Simple linear flow (≤5 nodes, no nesting) → native_connector
+    5. Numerical data/percentages → sheets_chart
+    6. Conceptual/metaphorical → ai_illustration
+    """
+    # This is a documentation/guidance function
+    # The actual selection is done by the builder based on content analysis
+    approaches = {
+        "drawio_sketch": {
+            "when": "Architecture diagrams, pipelines with labels, nested components, security zones, complex flows",
+            "how": "Create .drawio XML with sketch=1 style → export PNG at 3x → embed via build_diagram_image_slide()",
+            "templates": ["linear_pipeline", "architecture_nested", "hub_spoke", "layered_stack"]
+        },
+        "native_connector": {
+            "when": "Simple 3-5 node linear flow, no nesting, no arrow labels needed",
+            "how": "Use create_connector() between shapes created with createShape",
+            "templates": ["simple_flow"]
+        },
+        "sheets_chart": {
+            "when": "Numerical comparisons, memory sizes, performance metrics, percentages",
+            "how": "Create Google Sheets chart → embed via Sheets API link",
+            "templates": ["bar_chart", "comparison"]
+        },
+        "ai_illustration": {
+            "when": "Conceptual explanations, metaphors, engagement imagery",
+            "how": "GenerateImage tool → upload → build_split_image_slide()",
+            "templates": ["concept_art"]
+        }
+    }
+    return approaches
+
+
+def generate_drawio_xml(nodes, edges, layout="horizontal", page_width=1100, page_height=400):
+    """Generate draw.io XML with sketch mode styling from structured node/edge data.
+    
+    Args:
+        nodes: list of dicts with keys: id, label, x, y, width, height, color (optional)
+               color can be: 'teal', 'red', 'purple', 'orange', 'gray'
+        edges: list of dicts with keys: source, target, label (optional)
+        layout: 'horizontal' or 'vertical'
+        page_width: diagram canvas width
+        page_height: diagram canvas height
+    
+    Returns:
+        str: Complete .drawio XML string
+    """
+    COLOR_MAP = {
+        'teal': '#009DA5',
+        'red': '#EE0000',
+        'purple': '#7B2D8E',
+        'orange': '#EC7A08',
+        'gray': '#4D4D4D',
+        'dark_surface': '#2D1B4E',
+    }
+    
+    xml_parts = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<mxfile>',
+        f'  <diagram name="Diagram" id="d1">',
+        f'    <mxGraphModel dx="{page_width + 100}" dy="{page_height + 100}" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="{page_width}" pageHeight="{page_height}">',
+        '      <root>',
+        '        <mxCell id="0"/>',
+        '        <mxCell id="1" parent="0"/>',
+    ]
+    
+    # Add nodes
+    for node in nodes:
+        color = COLOR_MAP.get(node.get('color', 'teal'), node.get('color', '#009DA5'))
+        w = node.get('width', 180)
+        h = node.get('height', 70)
+        font_size = node.get('fontSize', 16)
+        style = (
+            f'rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;'
+            f'fillColor={color};strokeColor=none;fontColor=#FFFFFF;'
+            f'fontFamily=Red Hat Text;fontSize={font_size};fontStyle=1;'
+        )
+        xml_parts.append(
+            f'        <mxCell id="{node["id"]}" value="{node["label"]}" '
+            f'style="{style}" vertex="1" parent="1">'
+        )
+        xml_parts.append(
+            f'          <mxGeometry x="{node["x"]}" y="{node["y"]}" '
+            f'width="{w}" height="{h}" as="geometry"/>'
+        )
+        xml_parts.append('        </mxCell>')
+    
+    # Add edges
+    for i, edge in enumerate(edges):
+        label = edge.get('label', '')
+        label_attr = f' value="{label}"' if label else ''
+        font_size = 12 if label else 0
+        style = (
+            f'edgeStyle=orthogonalEdgeStyle;sketch=1;curveFitting=1;jiggle=2;'
+            f'strokeColor=#FFFFFF;strokeWidth=2;fontColor=#FFFFFF;fontSize={font_size};'
+        )
+        xml_parts.append(
+            f'        <mxCell id="e{i}"{label_attr} '
+            f'style="{style}" edge="1" source="{edge["source"]}" '
+            f'target="{edge["target"]}" parent="1">'
+        )
+        xml_parts.append('          <mxGeometry relative="1" as="geometry"/>')
+        xml_parts.append('        </mxCell>')
+    
+    xml_parts.extend([
+        '      </root>',
+        '    </mxGraphModel>',
+        '  </diagram>',
+        '</mxfile>',
+    ])
+    
+    return '\n'.join(xml_parts)
+
+
+def export_drawio_to_png(drawio_path, output_path, scale=3):
+    """Export a .drawio file to PNG using the draw.io CLI.
+    
+    Args:
+        drawio_path: path to the .drawio XML file
+        output_path: path for the output PNG
+        scale: export scale (3 = 3x resolution for crisp display)
+    
+    Returns:
+        str: path to the exported PNG, or None if export failed
+    """
+    cmd = [
+        '/Applications/draw.io.app/Contents/MacOS/draw.io',
+        '--export',
+        '--format', 'png',
+        '--scale', str(scale),
+        '--output', output_path,
+        drawio_path
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    if result.returncode == 0:
+        return output_path
+    return None
+
+
+# ================================================================
 # BATCH SENDER
 # ================================================================
 

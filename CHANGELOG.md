@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.2 — 2026-09-06
+- Added Diagram Selection Framework to SKILL.md:
+  - Decision tree for choosing between draw.io sketch, native connectors, Sheets charts, and AI illustrations
+  - Draw.io sketch mode guidelines (colors, fonts, export settings)
+  - Three reusable draw.io XML templates: linear pipeline, architecture with nesting, hub-and-spokes
+  - "When NOT to use draw.io" guidance for routing to simpler patterns
+- Added diagram helper functions to `helpers.py`:
+  - `select_diagram_approach()` — returns recommended diagram approach based on content characteristics
+  - `generate_drawio_xml()` — generates complete draw.io XML with sketch mode styling from structured node/edge data
+  - `export_drawio_to_png()` — exports .drawio files to PNG via the draw.io desktop CLI at configurable scale
+
+## v2.1 — 2026-09-06
+- Fixed setup_color_mode import bug — return dict for caller rebinding
+
 ## v2.0 — 2026-09-06
 - Added diagram helper functions to `helpers.py`:
   - `create_connector()` — connected line (arrow) between two shapes with configurable arrow styles and connection sites

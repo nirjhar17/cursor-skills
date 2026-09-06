@@ -1366,6 +1366,165 @@ def add_slide_number(reqs, slide_id, number):
 
 ## Gotchas
 
+## Diagram Selection Framework
+
+Before building any diagram slide, use this decision tree to pick the right approach:
+
+### Decision Tree
+
+1. Does the diagram need nested/grouped shapes (components inside components)?
+   → YES → Use draw.io sketch mode (exported as PNG, embedded via build_diagram_image_slide)
+   → Examples: KServe layers, Pod internals, security zones
+
+2. Does the diagram need labeled arrows (explaining what flows between components)?
+   → YES → Use draw.io sketch mode
+   → Examples: RAG pipeline, inference request flow, agent communication
+
+3. Is it a comparison or branching flow with multiple paths?
+   → YES → Use draw.io sketch mode
+   → Examples: Backend selection logic, decision trees
+
+4. Is it a simple linear flow (3-5 boxes in a straight line, no nesting)?
+   → YES → Use native connectors (create_connector in helpers.py)
+   → Examples: Simple A → B → C request flow
+
+5. Does it show numerical data, percentages, or trends?
+   → YES → Use Google Sheets chart (embedded via Sheets API)
+   → Examples: Memory usage comparison, quantization size reduction
+
+6. Is it a conceptual/metaphorical illustration (not a technical diagram)?
+   → YES → Use AI-generated image (GenerateImage + build_split_image_slide)
+   → Examples: Tokenization concept, agent reasoning loop
+
+### Draw.io Sketch Mode Guidelines
+
+When using draw.io sketch mode:
+
+- Style all shapes with: sketch=1;curveFitting=1;jiggle=2
+- Use large fonts: minimum 16px for labels, 14px for annotations
+- Set fontColor=#FFFFFF on ALL edge/arrow labels for dark backgrounds
+- Use high-contrast node colors:
+  - Teal (#009DA5) for primary nodes
+  - Red (#EE0000) for accent/critical nodes
+  - Purple (#7B2D8E) for secondary nodes
+  - Orange (#EC7A08) for optional/alternate nodes
+  - Light gray (#F2F2F2) with dark text for neutral nodes on light diagrams
+- Export at 3x scale for crisp display
+- CLI path: /Applications/draw.io.app/Contents/MacOS/draw.io
+- Export command: draw.io --export --format png --scale 3 --output output.png input.drawio
+
+### Draw.io XML Templates
+
+#### Template 1: Linear Pipeline Flow
+Use for: inference pipeline, RAG query flow, training pipeline
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile>
+  <diagram name="Flow" id="flow1">
+    <mxGraphModel dx="1200" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="400">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="n1" value="Step 1" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;fillColor=#009DA5;strokeColor=none;fontColor=#FFFFFF;fontFamily=Red Hat Text;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="160" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="Step 2" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;fillColor=#7B2D8E;strokeColor=none;fontColor=#FFFFFF;fontFamily=Red Hat Text;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="160" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="n3" value="Step 3" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;fillColor=#EE0000;strokeColor=none;fontColor=#FFFFFF;fontFamily=Red Hat Text;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="540" y="160" width="180" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;sketch=1;curveFitting=1;jiggle=2;strokeColor=#FFFFFF;strokeWidth=2;fontColor=#FFFFFF;fontSize=12;" edge="1" source="n1" target="n2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;sketch=1;curveFitting=1;jiggle=2;strokeColor=#FFFFFF;strokeWidth=2;fontColor=#FFFFFF;fontSize=12;" edge="1" source="n2" target="n3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+```
+
+#### Template 2: Architecture with Nesting
+Use for: KServe layers, K8s pod internals, security zones
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile>
+  <diagram name="Architecture" id="arch1">
+    <mxGraphModel dx="1200" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="500">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- Outer container -->
+        <mxCell id="c1" value="Container Name" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;fillColor=none;strokeColor=#009DA5;strokeWidth=2;fontColor=#FFFFFF;fontFamily=Red Hat Display;fontSize=16;fontStyle=1;verticalAlign=top;dashed=1;dashPattern=5 5;" vertex="1" parent="1">
+          <mxGeometry x="200" y="100" width="700" height="300" as="geometry"/>
+        </mxCell>
+        <!-- Inner components -->
+        <mxCell id="n1" value="Component A" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;fillColor=#009DA5;strokeColor=none;fontColor=#FFFFFF;fontFamily=Red Hat Text;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="160" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="n2" value="Component B" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;fillColor=#EE0000;strokeColor=none;fontColor=#FFFFFF;fontFamily=Red Hat Text;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="160" width="160" height="60" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+```
+
+#### Template 3: Fan-out/Fan-in (Hub and Spokes)
+Use for: Agent-to-tools, scheduler-to-workers, model server to backends
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile>
+  <diagram name="HubSpoke" id="hub1">
+    <mxGraphModel dx="1200" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="500">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <!-- Central hub -->
+        <mxCell id="hub" value="Central Hub" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;fillColor=#7B2D8E;strokeColor=none;fontColor=#FFFFFF;fontFamily=Red Hat Text;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="60" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <!-- Spokes -->
+        <mxCell id="s1" value="Spoke 1" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;fillColor=#009DA5;strokeColor=none;fontColor=#FFFFFF;fontFamily=Red Hat Text;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="220" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="Spoke 2" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;fillColor=#009DA5;strokeColor=none;fontColor=#FFFFFF;fontFamily=Red Hat Text;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="220" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="Spoke 3" style="rounded=1;whiteSpace=wrap;html=1;sketch=1;curveFitting=1;jiggle=2;fillColor=#009DA5;strokeColor=none;fontColor=#FFFFFF;fontFamily=Red Hat Text;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="220" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <!-- Edges with labels -->
+        <mxCell id="e1" value="Label 1" style="edgeStyle=orthogonalEdgeStyle;sketch=1;curveFitting=1;jiggle=2;strokeColor=#FFFFFF;strokeWidth=2;fontColor=#FFFFFF;fontSize=11;" edge="1" source="hub" target="s1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="Label 2" style="edgeStyle=orthogonalEdgeStyle;sketch=1;curveFitting=1;jiggle=2;strokeColor=#FFFFFF;strokeWidth=2;fontColor=#FFFFFF;fontSize=11;" edge="1" source="hub" target="s2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="Label 3" style="edgeStyle=orthogonalEdgeStyle;sketch=1;curveFitting=1;jiggle=2;strokeColor=#FFFFFF;strokeWidth=2;fontColor=#FFFFFF;fontSize=11;" edge="1" source="hub" target="s3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+```
+
+### When NOT to use draw.io
+
+- Simple bullet lists — use build_bullet_slide
+- Concept explanations — use build_split_image_slide with AI illustration
+- Feature comparisons — use build_two_column_slide or build_card_slide
+- Simple 2-3 node linear flow — native create_connector is fine
+
+## Gotchas
+
 ### REST API via gws (Approach A)
 
 1. **`gws` prints keyring messages to stdout** — when parsing JSON output,
