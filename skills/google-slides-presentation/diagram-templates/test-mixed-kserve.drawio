@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="31.4.2">
+  <diagram name="KServe Architecture (Sketch + Rich)">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" background="#1b0d33">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="KServe Architecture on OpenShift" style="text;html=1;fontSize=24;fontStyle=1;fontColor=#FFFFFF;align=center;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="300" y="8" width="1000" height="42" as="geometry" />
+        </mxCell>
+
+        <!-- ===== OUTER: Kubernetes Cluster (dashed container) ===== -->
+        <mxCell id="k8s_cluster" value="Kubernetes Cluster" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 4;fillColor=none;strokeColor=#37a3a3;strokeWidth=3;verticalAlign=top;fontColor=#63bdbd;fontSize=16;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="220" y="60" width="1350" height="800" as="geometry" />
+        </mxCell>
+
+        <!-- ===== USER / CLIENT (outside cluster) ===== -->
+        <mxCell id="user" value="User / Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#37a3a3;strokeColor=none;fontColor=#FFFFFF;fontSize=15;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;fillStyle=cross-hatch;hachureGap=8;" vertex="1" parent="1">
+          <mxGeometry x="15" y="132" width="155" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: User → Ingress -->
+        <mxCell id="e_user_ingress" value="HTTP / gRPC" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#63bdbd;strokeWidth=3;fontColor=#FFFFFF;fontSize=11;labelBackgroundColor=#1b0d33;sketch=1;curveFitting=1;jiggle=2;" edge="1" parent="1" source="user" target="ingress">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- NETWORKING label -->
+        <mxCell id="lbl_net" value="NETWORKING" style="text;html=1;fontSize=11;fontStyle=1;fontColor=#63bdbd;align=left;" vertex="1" parent="1">
+          <mxGeometry x="240" y="72" width="110" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Ingress / Route -->
+        <mxCell id="ingress" value="Ingress / Route" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B2D8E;strokeColor=none;fontColor=#FFFFFF;fontSize=14;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;fillStyle=cross-hatch;hachureGap=8;" vertex="1" parent="1">
+          <mxGeometry x="290" y="132" width="195" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Ingress → K8s Service -->
+        <mxCell id="e_ingress_svc" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#63bdbd;strokeWidth=2;sketch=1;curveFitting=1;jiggle=2;" edge="1" parent="1" source="ingress" target="k8s_svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- K8s Service (ClusterIP) -->
+        <mxCell id="k8s_svc" value="K8s Service&#xa;(ClusterIP)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#37a3a3;strokeColor=none;fontColor=#FFFFFF;fontSize=14;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;fillStyle=cross-hatch;hachureGap=8;" vertex="1" parent="1">
+          <mxGeometry x="580" y="125" width="195" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Service → InferenceService -->
+        <mxCell id="e_svc_isvc" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#63bdbd;strokeWidth=2;sketch=1;curveFitting=1;jiggle=2;" edge="1" parent="1" source="k8s_svc" target="isvc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- KServe InferenceService -->
+        <mxCell id="isvc" value="KServe&#xa;InferenceService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#147878;strokeColor=#37a3a3;strokeWidth=3;fontColor=#FFFFFF;fontSize=15;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;fillStyle=cross-hatch;hachureGap=6;" vertex="1" parent="1">
+          <mxGeometry x="880" y="115" width="240" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Badge: Autoscaling & Canary -->
+        <mxCell id="badge_auto" value="Autoscaling &amp; Canary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EE0000;strokeColor=none;fontColor=#FFFFFF;fontSize=10;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="918" y="92" width="155" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- SERVING label -->
+        <mxCell id="lbl_serve" value="SERVING" style="text;html=1;fontSize=11;fontStyle=1;fontColor=#63bdbd;align=left;" vertex="1" parent="1">
+          <mxGeometry x="900" y="200" width="80" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Note: KServe lifecycle -->
+        <mxCell id="note_serve" value="KServe manages model serving lifecycle:&#xa;autoscaling, canary rollouts, A/B testing" style="text;html=1;fontSize=11;fontColor=#d0c5f4;align=left;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="880" y="225" width="380" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: InferenceService → Pod container -->
+        <mxCell id="e_isvc_pod" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#EC7A08;strokeWidth=3;sketch=1;curveFitting=1;jiggle=2;" edge="1" parent="1" source="isvc" target="pod">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Model Server Pod (nested dashed container) ===== -->
+        <mxCell id="pod" value="Model Server Pod" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=5 5;fillColor=#21134d;strokeColor=#EC7A08;strokeWidth=3;verticalAlign=top;fontColor=#EC7A08;fontSize=15;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="320" y="330" width="660" height="310" as="geometry" />
+        </mxCell>
+
+        <!-- RUNTIME label -->
+        <mxCell id="lbl_runtime" value="RUNTIME" style="text;html=1;fontSize=11;fontStyle=1;fontColor=#EC7A08;align=center;" vertex="1" parent="1">
+          <mxGeometry x="580" y="345" width="80" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- vLLM Runtime -->
+        <mxCell id="vllm" value="vLLM Runtime" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EE0000;strokeColor=none;fontColor=#FFFFFF;fontSize=14;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;fillStyle=cross-hatch;hachureGap=7;" vertex="1" parent="1">
+          <mxGeometry x="360" y="390" width="170" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- GPU (nvidia.com/gpu) -->
+        <mxCell id="gpu" value="GPU&#xa;(nvidia.com/gpu)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B2D8E;strokeColor=none;fontColor=#FFFFFF;fontSize=13;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;fillStyle=cross-hatch;hachureGap=7;" vertex="1" parent="1">
+          <mxGeometry x="580" y="385" width="170" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- Model Weights (PVC) -->
+        <mxCell id="weights" value="Model Weights&#xa;(PVC)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#37a3a3;strokeColor=none;fontColor=#FFFFFF;fontSize=13;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;fillStyle=cross-hatch;hachureGap=7;" vertex="1" parent="1">
+          <mxGeometry x="360" y="500" width="170" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- KV Cache (GPU Memory) -->
+        <mxCell id="kv_cache" value="KV Cache&#xa;(GPU Memory)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EC7A08;strokeColor=none;fontColor=#FFFFFF;fontSize=13;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;fillStyle=cross-hatch;hachureGap=7;" vertex="1" parent="1">
+          <mxGeometry x="580" y="500" width="170" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Internal arrows within pod -->
+        <mxCell id="e_vllm_gpu" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d0c5f4;strokeWidth=2;sketch=1;curveFitting=1;jiggle=2;" edge="1" parent="1" source="vllm" target="gpu">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_vllm_wt" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d0c5f4;strokeWidth=2;sketch=1;curveFitting=1;jiggle=2;" edge="1" parent="1" source="vllm" target="weights">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_gpu_kv" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d0c5f4;strokeWidth=2;sketch=1;curveFitting=1;jiggle=2;" edge="1" parent="1" source="gpu" target="kv_cache">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== Model Source (right side) ===== -->
+        <mxCell id="model_src" value="Hugging Face Hub&#xa;/ OCI / S3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#37a3a3;strokeColor=#63bdbd;strokeWidth=2;fontColor=#FFFFFF;fontSize=14;fontStyle=1;sketch=1;curveFitting=1;jiggle=2;fillStyle=cross-hatch;hachureGap=8;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="445" width="260" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Model Source → Weights (pull model) -->
+        <mxCell id="e_src_wt" value="pull model" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#EC7A08;strokeWidth=3;fontColor=#FFFFFF;fontSize=11;labelBackgroundColor=#1b0d33;dashed=1;dashPattern=5 5;sketch=1;curveFitting=1;jiggle=2;" edge="1" parent="1" source="model_src" target="weights">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Note: Pod resources -->
+        <mxCell id="note_pod" value="GPU resources allocated via K8s scheduler&#xa;Model downloaded at pod startup" style="text;html=1;fontSize=11;fontColor=#d0c5f4;align=left;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="360" y="660" width="320" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Note: Model source description -->
+        <mxCell id="note_src" value="Models pulled from external registries&#xa;cached on PersistentVolumeClaim" style="text;html=1;fontSize=11;fontColor=#d0c5f4;align=left;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="530" width="280" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Bottom red bar -->
+        <mxCell id="bar" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ee0000;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry x="0" y="892" width="1600" height="8" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

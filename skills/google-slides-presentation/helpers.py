@@ -709,6 +709,44 @@ def add_icon(reqs, slide_id, image_url, left, top, width, height):
     return sid
 
 
+def add_icon_overlay(reqs, slide_id, icon_url, x_pt, y_pt, size_pt=32):
+    """Add a small icon image overlay on a slide at specified position.
+
+    Used to place Red Hat product icons on top of diagram images.
+    Icons from the Icon Repository (presentation ID:
+    1SRhy8-bYBgaA3Jsi1t_Fxz-Yo9ORgdRy5Kec9hg_wSM) are placed as
+    separate createImage elements overlaying the diagram PNG.
+
+    Args:
+        reqs: list of API requests
+        slide_id: slide object ID
+        icon_url: URL of the icon image (from Icon Repository contentUrl)
+        x_pt: x position in points
+        y_pt: y position in points
+        size_pt: icon size in points (default 32)
+    """
+    icon_id = uid()
+    reqs.append({
+        "createImage": {
+            "objectId": icon_id,
+            "url": icon_url,
+            "elementProperties": {
+                "pageObjectId": slide_id,
+                "size": {
+                    "width": {"magnitude": size_pt, "unit": "PT"},
+                    "height": {"magnitude": size_pt, "unit": "PT"}
+                },
+                "transform": {
+                    "scaleX": 1, "scaleY": 1,
+                    "translateX": x_pt, "translateY": y_pt,
+                    "unit": "PT"
+                }
+            }
+        }
+    })
+    return icon_id
+
+
 # ================================================================
 # COMPOSITE HELPERS (convenience wrappers for common patterns)
 # ================================================================
@@ -1182,7 +1220,12 @@ def build_diagram_from_data(reqs, slide_id, title, subtitle,
                             default_node_color=None,
                             default_text_color=None,
                             connector_color=None):
-    """Data-driven node-edge diagram built from structured data.
+    """DEPRECATED: Use Rich Draw.io v4 approach instead.
+    Create .drawio XML → export PNG → use build_diagram_image_slide().
+    This function creates basic native shapes that don't look professional.
+    Kept for backward compatibility only.
+
+    Data-driven node-edge diagram built from structured data.
 
     Creates labeled boxes for each node and connected arrows for each edge,
     all within the standard content zone boundaries.
@@ -1467,47 +1510,36 @@ def build_thank_you_slide(reqs, slide_id, slide_num, body_text=None, social_link
 
 
 # ================================================================
-# DIAGRAM SELECTION FRAMEWORK — v2.2
+# DIAGRAM APPROACH — Rich Draw.io v4 (v3.0)
 # ================================================================
+#
+# ALL architecture/flow/pipeline diagrams use hand-crafted draw.io XML
+# exported as high-res PNG images. This is the ONLY approved diagram
+# approach — do NOT use build_diagram_from_data() or native Slides API
+# shapes for diagrams.
+#
+# Workflow:
+#   1. Create .drawio XML with Rich v4 styling (dark purple bg, nested
+#      containers, industry shapes, badges, labeled arrows)
+#   2. Export at 3x scale: draw.io --export --format png --scale 3
+#   3. Upload PNG to GitHub (nirjhar17/cursor-skills assets/diagrams/)
+#   4. Embed via build_diagram_image_slide()
+#   5. Overlay Red Hat product icons via add_icon_overlay()
+#
+# See SKILL.md "Diagram Approach: Rich Draw.io v4" for full style guide
+# and diagram-templates/ for reference .drawio files.
 
 def select_diagram_approach(diagram_description):
-    """Recommend the best diagram approach based on content characteristics.
+    """DEPRECATED: All diagrams now use Rich Draw.io v4.
     
-    Returns one of: 'drawio_sketch', 'native_connector', 'sheets_chart', 'ai_illustration'
+    The ONLY approved approach is: hand-crafted .drawio XML → PNG export
+    → embed via build_diagram_image_slide() + icon overlays.
     
-    Decision tree:
-    1. Nested/grouped shapes → drawio_sketch
-    2. Labeled arrows needed → drawio_sketch
-    3. Branching/multiple paths → drawio_sketch
-    4. Simple linear flow (≤5 nodes, no nesting) → native_connector
-    5. Numerical data/percentages → sheets_chart
-    6. Conceptual/metaphorical → ai_illustration
+    Do NOT use build_diagram_from_data(), native connectors, or Sheets
+    charts for diagrams. Use build_split_image_slide() for conceptual
+    illustrations only.
     """
-    # This is a documentation/guidance function
-    # The actual selection is done by the builder based on content analysis
-    approaches = {
-        "drawio_sketch": {
-            "when": "Architecture diagrams, pipelines with labels, nested components, security zones, complex flows",
-            "how": "Create .drawio XML with sketch=1 style → export PNG at 3x → embed via build_diagram_image_slide()",
-            "templates": ["linear_pipeline", "architecture_nested", "hub_spoke", "layered_stack"]
-        },
-        "native_connector": {
-            "when": "Simple 3-5 node linear flow, no nesting, no arrow labels needed",
-            "how": "Use create_connector() between shapes created with createShape",
-            "templates": ["simple_flow"]
-        },
-        "sheets_chart": {
-            "when": "Numerical comparisons, memory sizes, performance metrics, percentages",
-            "how": "Create Google Sheets chart → embed via Sheets API link",
-            "templates": ["bar_chart", "comparison"]
-        },
-        "ai_illustration": {
-            "when": "Conceptual explanations, metaphors, engagement imagery",
-            "how": "GenerateImage tool → upload → build_split_image_slide()",
-            "templates": ["concept_art"]
-        }
-    }
-    return approaches
+    return "rich_drawio_v4"
 
 
 def generate_drawio_xml(nodes, edges, layout="horizontal", page_width=1100, page_height=400):

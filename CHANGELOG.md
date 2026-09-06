@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.0 — 2026-09-06
+- Finalized diagram approach: Rich Draw.io v4 (hand-crafted .drawio → PNG → embed)
+- Deprecated build_diagram_from_data() — native Slides API shapes don't look professional
+- Added add_icon_overlay() helper for Red Hat product icon placement
+- Added 3 reference .drawio templates (inference pipeline, RAG pipeline, KServe architecture)
+- Updated SKILL.md with complete diagram style guide and shape reference
+- Removed Excalidraw, basic sketch, and Sheets chart options from diagram framework
+
 ## v2.2 — 2026-09-06
 - Added Diagram Selection Framework to SKILL.md:
   - Decision tree for choosing between draw.io sketch, native connectors, Sheets charts, and AI illustrations
