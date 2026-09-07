@@ -273,8 +273,7 @@ slide build patterns (build_two_column_slide, etc.), and the batch sender.
 - `build_thank_you_slide()` — complete last slide (MANDATORY, see below)
 - `build_agenda_slide()` — complete agenda slide with icon-or-badge items (MANDATORY icon lookup first, see A4b below)
 - `build_split_image_slide()` — text bullets + image side-by-side (v2.0)
-- `build_diagram_image_slide()` — full-width diagram image with title (v2.0)
-- `build_diagram_from_data()` — DEPRECATED: use Rich Draw.io v4 approach instead (v2.0, deprecated v3.0)
+- `build_diagram_image_slide()` — embed Rich Draw.io v4 exported PNGs as full-width diagram slides (v2.0)
 - `create_connector()` — connected arrow between two shapes (v2.0)
 - `add_icon_overlay()` — place small Red Hat product icons on diagram slides (v3.0)
 
@@ -669,10 +668,7 @@ Row slots subdivide the content zone evenly so any item count (2-8) fits without
 - **Flowchart / Decision slide** — dark rectangle for decision question at top, colored rectangles for options below, small arrow shapes (triangle/rectangle) connecting elements vertically, 3 destination boxes at bottom
 - **Upgrade/Process Path diagram** — colored background panels per path (pastel), white boxes for each state/step, small filled rectangles as directional arrows between boxes, label text below or beside each path, "RECOMMENDED" badge (green rounded-rect) on preferred path
 
-### v2.0 Diagram & Visual Patterns
-
-These patterns were added in v2.0 and live in `helpers.py` alongside the
-existing build patterns. Import them via `from helpers import *`.
+### Additional Visual Patterns
 
 #### Pattern: Split-Layout with Image (text + illustration)
 
@@ -701,10 +697,11 @@ Image must be a publicly-fetchable URL (raw.githubusercontent.com is best).
 The image auto-centers vertically in the content zone and respects the
 footer boundary.
 
-#### Pattern: Diagram Image Slide (full-width diagram)
+#### Pattern: Diagram Image Slide (Rich Draw.io v4 exported PNGs)
 
-Use for pre-rendered diagrams (draw.io exports, architecture PNGs, etc.)
-that should fill most of the content zone.
+Use for embedding Rich Draw.io v4 exported PNG diagrams that should fill
+most of the content zone. See "Diagram Approach: Rich Draw.io v4" below
+for how to create the source .drawio files.
 
 ```python
 s = uid()
@@ -740,66 +737,70 @@ create_connector(reqs, slide_id, box_a, box_b,
 Arrow styles: `"NONE"`, `"OPEN_ARROW"`, `"FILL_ARROW"`,
 `"FILL_CIRCLE"`, `"FILL_SQUARE"`, `"FILL_DIAMOND"`.
 
-#### Pattern: Data-Driven Diagram (nodes + edges)
+### Diagram Approach: Rich Draw.io v4
 
-Use for architecture diagrams, flowcharts, or any graph that can be
-expressed as a list of positioned nodes and edges between them.
+All architecture/flow/pipeline diagrams use hand-crafted draw.io XML exported as high-res PNG images. This is the ONLY approved diagram approach — do NOT use native Slides API shapes for diagrams.
 
-```python
-nodes = [
-    {"id": "user",  "label": "User Request",     "x": 3.5, "y": 0.0, "w": 2.0, "h": 0.5,
-     "color": TEAL_50, "text_color": WHITE},
-    {"id": "route", "label": "Istio Gateway",     "x": 3.5, "y": 0.9, "w": 2.0, "h": 0.5},
-    {"id": "kserve","label": "KServe Predictor",  "x": 3.5, "y": 1.8, "w": 2.0, "h": 0.5,
-     "color": PURPLE_50, "text_color": WHITE},
-    {"id": "gpu",   "label": "GPU Pod (vLLM)",    "x": 3.5, "y": 2.7, "w": 2.0, "h": 0.5,
-     "color": RH_RED, "text_color": WHITE},
-]
-edges = [
-    {"from_id": "user",  "to_id": "route"},
-    {"from_id": "route", "to_id": "kserve"},
-    {"from_id": "kserve","to_id": "gpu"},
-]
-s = uid()
-reqs.append(create_slide(s))
-build_diagram_from_data(reqs, s,
-    title="Request Flows Through Four Layers",
-    subtitle="Each layer adds routing, scaling, or runtime logic",
-    nodes=nodes, edges=edges,
-    slide_num=6, color_mode=COLOR_MODE)
+#### When to Use a Diagram
+- Architecture showing components and their relationships
+- Pipeline/flow showing data transformation steps
+- Any slide that would benefit from visual boxes + arrows
+
+#### When NOT to Use a Diagram (use other slide types instead)
+- Concept explanations → use build_split_image_slide() with AI illustration
+- Feature comparisons → use build_two_column_slide() or build_card_slide()
+- Simple lists → use build_bullet_slide()
+
+#### Diagram Style Rules
+
+1. Dark purple background: Set `background="#1b0d33"` in the mxGraphModel
+2. Use proper industry shapes based on component type:
+   - Databases/storage: `shape=cylinder3` (cylinder)
+   - Cloud services: `shape=cloud`
+   - Documents/files: `shape=document`
+   - Processing/transforms: `shape=process` (box with side bars)
+   - Users/clients: `ellipse` (circle/oval)
+   - K8s resources: `rounded=1` rectangle with badge
+   - Containers/boundaries: dashed border container (`dashed=1;dashPattern=5 5;verticalAlign=top;`)
+3. Color palette:
+   - Teal (#37a3a3, #009DA5) for primary/data components
+   - Red (#EE0000) for critical/accent (model servers, first token)
+   - Purple (#7B2D8E, #21134d) for secondary/infrastructure
+   - Orange (#EC7A08) for optional/alternate paths
+   - Teal-dark (#147878) for badges
+4. ALL text: `fontColor=#FFFFFF`
+5. ALL edge labels: `fontColor=#FFFFFF;labelBackgroundColor=#1b0d33`
+6. ALL arrows: `strokeColor=#63bdbd;strokeWidth=2` or `strokeColor=#FFFFFF;strokeWidth=2`
+7. Font sizes: 14-18px for node labels, 10-12px for edge labels, 18-24px for section titles
+8. Use nested containers for grouping (e.g., "Kubernetes Cluster", "Prefill Phase", "Query Pipeline")
+9. Use badges for annotations (e.g., "Compute-Bound", "Batch Ingestion", "Always-On")
+10. Page size: 1600x900 for proper aspect ratio
+
+#### Export and Embed
+
+```bash
+# Export at 3x scale for crisp display
+/Applications/draw.io.app/Contents/MacOS/draw.io --export --format png --scale 3 --output diagram.png diagram.drawio
 ```
 
-Node coordinates (`x`, `y`) are in inches relative to the content zone
-origin (top-left of content area). The function clamps all nodes to
-`CONTENT_TOP_Y` / `CONTENT_BOT_Y`. Optional per-node keys: `shape`
-(`"ROUND_RECTANGLE"`, `"RECTANGLE"`, `"ELLIPSE"`), `font_size` (int, pt).
+Then embed using build_diagram_image_slide() in helpers.py.
 
-### Diagram Building Technique (Layered Shapes)
+#### Red Hat Product Icon Overlay
 
-Diagrams are built using a layered approach — background panels first,
-then content elements on top:
+After embedding the diagram PNG, overlay official Red Hat product icons from the Icon Repository (presentation ID: 1SRhy8-bYBgaA3Jsi1t_Fxz-Yo9ORgdRy5Kec9hg_wSM) on relevant components:
+- OpenShift icon on K8s boxes
+- AI Model icon on ML model boxes
+- Private Cloud icon on storage boxes
+- AI Inference icon on inference/LLM boxes
 
-1. **Background panel** — large `RECTANGLE` with pastel fill (e.g., #E6F4F5
-   for blue-tint, #E8F5E9 for green-tint, #FEF5E5 for orange-tint,
-   #FDEDED for red-tint). No outline or thin gray outline.
-2. **Content boxes** — smaller `RECTANGLE` with white fill (#FFFFFF) and
-   light gray outline, placed inside the background panel.
-3. **Text labels** — `TEXT_BOX` positioned on top of or inside each box.
-4. **Connector arrows** — small filled `RECTANGLE` (e.g., 0.6"×0.35")
-   with solid color matching the path's theme color, placed between boxes.
-5. **Accent dots** — small `ELLIPSE` shapes with solid fill, used as
-   timeline markers or status indicators.
-6. **Red accent bar** — every content slide gets a full-width (10") red rectangle
-   at y=0, height 0.06". Use `add_red_accent_bar()` function — do NOT hardcode.
+Use the `add_icon_overlay()` helper from helpers.py to place icons as 32pt × 32pt separate createImage elements on the slide.
 
-```python
-# Pastel background colors for diagram panels
-PANEL_BLUE   = {"red": 0.902, "green": 0.957, "blue": 0.961}   # #E6F4F5
-PANEL_GREEN  = {"red": 0.910, "green": 0.961, "blue": 0.914}   # #E8F5E9
-PANEL_ORANGE = {"red": 0.996, "green": 0.961, "blue": 0.898}   # #FEF5E5
-PANEL_RED    = {"red": 0.992, "green": 0.929, "blue": 0.929}   # #FDEDED
-PANEL_GRAY   = {"red": 0.910, "green": 0.922, "blue": 0.941}   # #E8EBF0
-```
+#### Reference Diagrams
+
+See these .drawio files in `diagram-templates/` as templates for the approved quality level:
+- `inference-pipeline.drawio` — two-phase inference with nested containers, badges, KV cache visualization
+- `test-rag-industry-colored.drawio` — RAG pipeline with industry shapes and two-lane layout
+- `test-mixed-kserve.drawio` — KServe architecture with nested K8s boundary
 
 ### Typography
 
@@ -1364,71 +1365,6 @@ def add_slide_number(reqs, slide_id, number):
         }
     }})
 ```
-
-## Diagram Approach: Rich Draw.io v4
-
-All architecture/flow/pipeline diagrams use hand-crafted draw.io XML exported as high-res PNG images. This is the ONLY approved diagram approach — do NOT use build_diagram_from_data() or native Slides API shapes for diagrams.
-
-### When to Use a Diagram
-- Architecture showing components and their relationships
-- Pipeline/flow showing data transformation steps
-- Any slide that would benefit from visual boxes + arrows
-
-### When NOT to Use a Diagram (use other slide types instead)
-- Concept explanations → use build_split_image_slide() with AI illustration
-- Feature comparisons → use build_two_column_slide() or build_card_slide()
-- Simple lists → use build_bullet_slide()
-
-### Diagram Style Rules
-
-1. Dark purple background: Set `background="#1b0d33"` in the mxGraphModel
-2. Use proper industry shapes based on component type:
-   - Databases/storage: `shape=cylinder3` (cylinder)
-   - Cloud services: `shape=cloud`
-   - Documents/files: `shape=document`
-   - Processing/transforms: `shape=process` (box with side bars)
-   - Users/clients: `ellipse` (circle/oval)
-   - K8s resources: `rounded=1` rectangle with badge
-   - Containers/boundaries: dashed border container (`dashed=1;dashPattern=5 5;verticalAlign=top;`)
-3. Color palette:
-   - Teal (#37a3a3, #009DA5) for primary/data components
-   - Red (#EE0000) for critical/accent (model servers, first token)
-   - Purple (#7B2D8E, #21134d) for secondary/infrastructure
-   - Orange (#EC7A08) for optional/alternate paths
-   - Teal-dark (#147878) for badges
-4. ALL text: `fontColor=#FFFFFF`
-5. ALL edge labels: `fontColor=#FFFFFF;labelBackgroundColor=#1b0d33`
-6. ALL arrows: `strokeColor=#63bdbd;strokeWidth=2` or `strokeColor=#FFFFFF;strokeWidth=2`
-7. Font sizes: 14-18px for node labels, 10-12px for edge labels, 18-24px for section titles
-8. Use nested containers for grouping (e.g., "Kubernetes Cluster", "Prefill Phase", "Query Pipeline")
-9. Use badges for annotations (e.g., "Compute-Bound", "Batch Ingestion", "Always-On")
-10. Page size: 1600x900 for proper aspect ratio
-
-### Export and Embed
-
-```bash
-# Export at 3x scale for crisp display
-/Applications/draw.io.app/Contents/MacOS/draw.io --export --format png --scale 3 --output diagram.png diagram.drawio
-```
-
-Then embed using build_diagram_image_slide() in helpers.py.
-
-### Red Hat Product Icon Overlay
-
-After embedding the diagram PNG, overlay official Red Hat product icons from the Icon Repository (presentation ID: 1SRhy8-bYBgaA3Jsi1t_Fxz-Yo9ORgdRy5Kec9hg_wSM) on relevant components:
-- OpenShift icon on K8s boxes
-- AI Model icon on ML model boxes
-- Private Cloud icon on storage boxes
-- AI Inference icon on inference/LLM boxes
-
-Use the `add_icon_overlay()` helper from helpers.py to place icons as 32pt × 32pt separate createImage elements on the slide.
-
-### Reference Diagrams
-
-See these .drawio files in `diagram-templates/` as templates for the approved quality level:
-- `inference-pipeline.drawio` — two-phase inference with nested containers, badges, KV cache visualization
-- `test-rag-industry-colored.drawio` — RAG pipeline with industry shapes and two-lane layout
-- `test-mixed-kserve.drawio` — KServe architecture with nested K8s boundary
 
 ## Gotchas
 

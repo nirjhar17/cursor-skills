@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.1 — 2026-09-07
+- Cleaned up SKILL.md: removed old v2.0 diagram patterns (Data-Driven Diagram, Layered Shapes, pastel panels)
+- Removed all references to deprecated build_diagram_from_data()
+- Moved Rich Draw.io v4 section to replace old diagram section for cleaner document flow
+- Single diagram approach: Rich Draw.io v4 → PNG → build_diagram_image_slide()
+
 ## v3.0 — 2026-09-06
 - Finalized diagram approach: Rich Draw.io v4 (hand-crafted .drawio → PNG → embed)
 - Deprecated build_diagram_from_data() — native Slides API shapes don't look professional
